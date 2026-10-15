@@ -1,0 +1,67 @@
+services:
+  # ---------------------------------------------------------
+  # 1. Боевой сервис API (профиль "prod")
+  # ---------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tradepulse-api:latest
+    container_name: tradepulse-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=production
+    networks:
+      - tradepulse-network
+    profiles:       
+      - prod         
+
+  # ---------------------------------------------------------
+  # 2. Сервис для активной разработки (профиль "dev")
+  # ---------------------------------------------------------
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tradepulse-api:dev
+    container_name: tradepulse-api-dev
+    command: >
+      uvicorn tradepulse.main:app
+      --app-dir src
+      --host 0.0.0.0
+      --port 8000
+      --reload
+    volumes:
+      - ./src:/app/src:ro
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=development
+      - DEBUG=True
+    networks:
+      - tradepulse-network
+    profiles:
+      - dev
+
+  # ---------------------------------------------------------
+  # 3. Вспомогательная утилита: локальный SMTP-сервер Mailpit
+  # ---------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: tradepulse-mailpit
+    ports:
+      - "8025:8025"  # Веб-панель для просмотра писем
+      - "1025:1025"  # SMTP-порт для отправки из приложения
+    networks:
+      - tradepulse-network
+    profiles:
+      - dev
+      - tools
+
+networks:
+  tradepulse-network:
+    driver: bridge
