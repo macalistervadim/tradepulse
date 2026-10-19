@@ -1,7 +1,8 @@
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
+
 from tradepulse.core.logger import logger, setup_logging
 
 
