@@ -1,6 +1,28 @@
 services:
   # ---------------------------------------------------------
-  # 1. Боевой сервис API (профиль "prod")
+  # 1. Реляционная база данных PostgreSQL 17
+  # ---------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: tradepulse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tradepulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tradepulse_password}
+      POSTGRES_DB: ${POSTGRES_DB:-tradepulse_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tradepulse-network
+    # База данных требуется как в dev-режиме, так и при локальном боевом тестировании
+    profiles:
+      - dev
+      - prod
+
+  # ---------------------------------------------------------
+  # 2. Боевой сервис API (профиль "prod")
   # ---------------------------------------------------------
   api:
     build:
@@ -9,18 +31,21 @@ services:
     image: tradepulse-api:latest
     container_name: tradepulse-api
     restart: unless-stopped
+    depends_on:
+      - postgres
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-tradepulse}:${POSTGRES_PASSWORD:-tradepulse_password}@postgres:5432/${POSTGRES_DB:-tradepulse_db}
     networks:
       - tradepulse-network
     profiles:       
       - prod         
 
   # ---------------------------------------------------------
-  # 2. Сервис для активной разработки (профиль "dev")
+  # 3. Сервис для активной разработки (профиль "dev")
   # ---------------------------------------------------------
   api-dev:
     build:
@@ -28,6 +53,8 @@ services:
       dockerfile: Dockerfile
     image: tradepulse-api:dev
     container_name: tradepulse-api-dev
+    depends_on:
+      - postgres
     command: >
       uvicorn tradepulse.main:app
       --app-dir src
@@ -42,25 +69,30 @@ services:
       - PYTHONUNBUFFERED=1
       - ENVIRONMENT=development
       - DEBUG=True
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-tradepulse}:${POSTGRES_PASSWORD:-tradepulse_password}@postgres:5432/${POSTGRES_DB:-tradepulse_db}
     networks:
       - tradepulse-network
     profiles:
       - dev
 
   # ---------------------------------------------------------
-  # 3. Вспомогательная утилита: локальный SMTP-сервер Mailpit
+  # 4. Вспомогательная утилита: почтовая заглушка Mailpit
   # ---------------------------------------------------------
   mailpit:
     image: axllent/mailpit:latest
     container_name: tradepulse-mailpit
     ports:
-      - "8025:8025"  # Веб-панель для просмотра писем
-      - "1025:1025"  # SMTP-порт для отправки из приложения
+      - "8025:8025"
+      - "1025:1025"
     networks:
       - tradepulse-network
     profiles:
       - dev
       - tools
+
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   tradepulse-network:
