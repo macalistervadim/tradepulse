@@ -71,3 +71,37 @@ known-first-party = ["tradepulse"]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.mypy]
+# Версия синтаксиса Python для анализа
+python_version = "3.13"
+
+# Базовый каталог с исходным кодом (src-layout)
+mypy_path = "src"
+
+# Включение строгого режима проверок (включает большинство строгих флагов)
+strict = true
+
+# Запрет неявного приведения к Any при отсутствии аннотаций
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+# Предупреждение о неиспользуемых директивах игнорирования (# type: ignore)
+warn_unused_ignores = true
+
+# Предупреждение о возврате значения Any из строго типизированной функции
+warn_return_any = true
+
+# Требование явной проверки на None
+no_implicit_optional = true
+
+# Детализация сообщений об ошибках
+show_error_codes = true
+pretty = true
+
+# Игнорирование отсутствия stubs-файлов для нетипизированных внешних библиотек
+[[tool.mypy.overrides]]
+module = [
+    "structlog.*",
+]
+ignore_missing_imports = true
