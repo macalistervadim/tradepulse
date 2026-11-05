@@ -6,6 +6,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tradepulse.api.v1.assets import router as assets_router
 from tradepulse.core.database import engine, get_db_session
 from tradepulse.core.logger import logger, setup_logging
 
@@ -35,6 +36,7 @@ app = FastAPI(
     title="TradePulse API",
     lifespan=lifespan,
 )
+app.include_router(assets_router, prefix="/api/v1")
 
 @app.get("/health")
 async def healthcheck(
