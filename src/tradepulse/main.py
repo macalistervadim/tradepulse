@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tradepulse.core.database import engine, get_db_session
 from tradepulse.core.logger import logger, setup_logging
 
+DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -36,7 +38,7 @@ app = FastAPI(
 
 @app.get("/health")
 async def healthcheck(
-        db: AsyncSession = Depends(get_db_session),
+        db: DBSessionDep,
 ) -> dict[str, str]:
     # Выполняем проверочный неблокирующий SQL-запрос через выданную сессию
     result = await db.execute(text("SELECT version();"))
