@@ -69,3 +69,23 @@ sync:
 clean:
     rm -rf .pytest_cache .ruff_cache .mypy_cache build dist htmlcov
     find . -type d -name "__pycache__" -exec rm -rf {} +
+
+# ==============================================================================
+# 5. Управление миграциями базы данных (Alembic)
+# ==============================================================================
+
+# Создание новой ревизии на основе изменений в моделях
+migrate-make message:
+    uv run alembic revision --autogenerate -m "{{message}}"
+
+# Применение всех непримененных миграций к БД
+migrate:
+    uv run alembic upgrade head
+
+# Откат последней примененной миграции
+migrate-rollback:
+    uv run alembic downgrade -1
+
+# Просмотр текущей версии схемы в базе данных
+migrate-current:
+    uv run alembic current
