@@ -5,21 +5,45 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: tradepulse-postgres
-    restart: unless-stopped
+    profiles: [ "dev" ]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-tradepulse}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tradepulse_password}
       POSTGRES_DB: ${POSTGRES_DB:-tradepulse_db}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - tradepulse-network
-    # База данных требуется как в dev-режиме, так и при локальном боевом тестировании
-    profiles:
-      - dev
-      - prod
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tradepulse} -d ${POSTGRES_DB:-tradepulse_db}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-test:
+    image: postgres:17-alpine
+    container_name: tradepulse-postgres-test
+    profiles: [ "test" ]
+    environment:
+      POSTGRES_USER: tradepulse_test
+      POSTGRES_PASSWORD: tradepulse_test_password
+      POSTGRES_DB: tradepulse_test_db
+    ports:
+      - "5434:5432"
+    # Храним тестовую БД в оперативной памяти (RAM) для максимальной скорости прогонов
+    tmpfs:
+      - /var/lib/postgresql/data
+    # Отключаем гарантии долговечности диска (WAL fsync), так как база временная
+    command: >
+      postgres
+      -c fsync=off
+      -c synchronous_commit=off
+      -c full_page_writes=off
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U tradepulse_test -d tradepulse_test_db" ]
+      interval: 2s
+      timeout: 3s
+      retries: 10
 
   # ---------------------------------------------------------
   # 2. Боевой сервис API (профиль "prod")
@@ -93,6 +117,7 @@ services:
 volumes:
   postgres_data:
     driver: local
+  postgres_dev_data:
 
 networks:
   tradepulse-network:
