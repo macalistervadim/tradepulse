@@ -89,3 +89,46 @@ migrate-rollback:
 # Просмотр текущей версии схемы в базе данных
 migrate-current:
     uv run alembic current
+    
+# ==============================================================================
+# 6. Автоматизированное тестирование (Pytest + Docker Test Profile)
+# ==============================================================================
+
+# Поднять изолированную тестовую БД и дождаться её полной готовности
+test-db-up:
+    docker compose --profile test up postgres-test -d --wait
+
+# Остановить и удалить временную тестовую БД (очистка RAM/tmpfs)
+test-db-down:
+    docker compose --profile test down -v
+
+# Полный цикл: поднять тестовую БД -> запустить тесты -> гарантированно погасить БД
+test *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trap 'docker compose --profile test down -v > /dev/null 2>&1 || true' EXIT
+    docker compose --profile test up postgres-test -d --wait
+    uv run pytest {{args}}
+
+# Быстрый запуск тестов при уже поднятой тестовой БД (поддерживает передачу путей и флагов)
+test-fast *args:
+    uv run pytest {{args}}
+
+# Запуск только быстрых модульных тестов без поднятия Docker
+test-unit *args:
+    uv run pytest -m unit {{args}}
+
+# Полный прогон тестов с расчетом покрытия кода (coverage.py) и отчетом в терминале
+test-cov:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trap 'docker compose --profile test down -v > /dev/null 2>&1 || true' EXIT
+    docker compose --profile test up postgres-test -d --wait
+    uv run pytest --cov=src/tradepulse --cov-report=term-missing --cov-report=html
+
+# ==============================================================================
+# 7. Единый конвейер контроля качества (Quality Gate)
+# ==============================================================================
+
+# Комплексная проверка перед коммитом: линтер, строгая типизация и все тесты
+qa: check test
