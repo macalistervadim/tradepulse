@@ -1,7 +1,7 @@
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import CursorResult, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tradepulse.core.database import Base
@@ -57,8 +57,7 @@ class BaseDAO[ModelType: Base]:
     async def delete(self, obj_id: Any) -> bool:
         """Удаление записи по первичному ключу."""
         query = (
-            delete(self.model)
-            .where(self.model.id == obj_id)  # type: ignore[attr-defined]
+            delete(self.model).where(self.model.id == obj_id)  # type: ignore[attr-defined]
         )
-        result = await self.session.execute(query)
+        result = cast(CursorResult[Any], await self.session.execute(query))
         return bool(result.rowcount and result.rowcount > 0)

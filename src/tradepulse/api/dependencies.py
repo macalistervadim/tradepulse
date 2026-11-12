@@ -17,7 +17,6 @@ def get_asset_repository(session: SessionDep) -> AssetRepository:
     return AssetRepository(session=session)
 
 
-
 async def get_uow() -> AsyncGenerator[IUnitOfWork]:
     """Генератор единицы работы (Unit of Work) на время обработки запроса."""
     uow = UnitOfWork()

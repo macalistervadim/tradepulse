@@ -11,6 +11,8 @@ EnvironmentType = Literal["dev", "test", "prod"]
 def setup_logging(env: EnvironmentType = "dev") -> None:
     """Конфигурирует форматирование и уровень детализации логирования под конкретное окружение."""
 
+    renderer: structlog.types.Processor = structlog.dev.ConsoleRenderer()
+
     # 1. Сегментация уровня важности и процессоров форматирования
     if env == "dev":
         log_level = logging.DEBUG

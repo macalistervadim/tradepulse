@@ -70,7 +70,9 @@ async def clean_tables(
     tables_str = ", ".join(f'"{name}"' for name in table_names)
     async with test_engine.begin() as conn:
         # Быстрая очистка с обнулением счетчиков автоинкремента (ID снова начинаются с 1)
-        await conn.execute(text(f"TRUNCATE TABLE {tables_str} RESTART IDENTITY CASCADE;"))
+        await conn.execute(
+            text(f"TRUNCATE TABLE {tables_str} RESTART IDENTITY CASCADE;")
+        )
 
 
 @pytest.fixture(scope="function")

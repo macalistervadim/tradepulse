@@ -40,6 +40,7 @@ exclude = [
     "__pycache__",
     "build",
     "dist",
+    "migrations/versions",
 ]
 
 [tool.ruff.lint]
@@ -107,3 +108,5 @@ markers = [
     "unit: быстрые модульные тесты без внешних зависимостей",
     "integration: интеграционные тесты с реальной базой данных PostgreSQL",
 ]
+
+asyncio_default_test_loop_scope = "session"

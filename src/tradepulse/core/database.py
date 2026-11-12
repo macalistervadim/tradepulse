@@ -28,9 +28,11 @@ async_session_maker = async_sessionmaker(
     autoflush=False,
 )
 
+
 # 3. Базовый декларативный класс для будущих ORM-моделей
 class Base(DeclarativeBase):
     pass
+
 
 # 4. FastAPI Dependency для безопасной выдачи сессий в эндпоинты
 async def get_db_session() -> AsyncGenerator[AsyncSession]:

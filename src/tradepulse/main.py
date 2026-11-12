@@ -12,6 +12,7 @@ from tradepulse.core.logger import logger, setup_logging
 
 DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     setup_logging(env="dev")
@@ -32,15 +33,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await engine.dispose()
     logger.info("Пул соединений с PostgreSQL закрыт")
 
+
 app = FastAPI(
     title="TradePulse API",
     lifespan=lifespan,
 )
 app.include_router(assets_router, prefix="/api/v1")
 
+
 @app.get("/health")
 async def healthcheck(
-        db: DBSessionDep,
+    db: DBSessionDep,
 ) -> dict[str, str]:
     # Выполняем проверочный неблокирующий SQL-запрос через выданную сессию
     result = await db.execute(text("SELECT version();"))
