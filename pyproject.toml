@@ -18,8 +18,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx>=0.27.0",
     "mypy>=2.4.0",
-    "pytest>=9.1.1",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
     "ruff>=0.17.0",
 ]
 
@@ -75,3 +78,32 @@ known-first-party = ["tradepulse"]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",    # Разрешаем использование assert в тестах
+    "ARG",     # Разрешаем неиспользуемые аргументы (фикстуры pytest передаются по имени)
+    "PLR2004", # Разрешаем "магические" числа в тестовых проверках (например, статус-код 201)
+]
+
+[tool.pytest.ini_options]
+# Корневой каталог поиска тестов
+testpaths = ["tests"]
+# Явное добавление src в PYTHONPATH при запуске pytest
+pythonpath = ["src"]
+# Автоматический режим для асинхронных тестов (не нужно вешать @pytest.mark.asyncio на каждый тест)
+asyncio_mode = "auto"
+# Единый scope цикла событий для предотвращения конфликтов пула asyncpg между тестами
+asyncio_default_fixture_loop_scope = "session"
+# Полезные флаги по умолчанию: подробный вывод, строгость маркеров и вывод 5 самых медленных тестов
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--durations=5",
+]
+# Регистрация пользовательских маркеров для выборочного запуска
+markers = [
+    "unit: быстрые модульные тесты без внешних зависимостей",
+    "integration: интеграционные тесты с реальной базой данных PostgreSQL",
+]
