@@ -110,3 +110,37 @@ markers = [
 ]
 
 asyncio_default_test_loop_scope = "session"
+
+[tool.coverage.run]
+# Измеряем покрытие только исходного кода нашего пакета
+source = ["src/tradepulse"]
+# Обязательно включаем анализ ветвлений (if/else, try/except)
+branch = true
+# Исключаем служебные файлы инициализации без логики
+omit = [
+    "src/tradepulse/__init__.py",
+    "src/tradepulse/*/__init__.py",
+]
+
+[tool.coverage.report]
+# Показывать номера конкретных непокрытых строк прямо в терминале
+show_missing = true
+# Пропускать в таблице файлы со 100% покрытием, чтобы фокусироваться на пробелах
+skip_covered = false
+# Точность округления процентов до двух знаков
+precision = 2
+# Минимальный порог покрытия: если упадет ниже 80%, pytest завершится с ошибкой
+fail_under = 80.0
+# Стандартные конструкции, которые не должны снижать метрику покрытия
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]
+
+[tool.coverage.html]
+# Каталог для генерации интерактивного HTML-отчета
+directory = "htmlcov"
